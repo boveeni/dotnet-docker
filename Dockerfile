@@ -11,8 +11,17 @@ COPY . .
 WORKDIR "/src/."
 RUN dotnet build "dotnet-docker.csproj" -c Release -o /app/build
 
+FROM node:stretch-slim AS node
+COPY ["./ClientApp/", "/ClientApp"]
+WORKDIR /ClientApp
+RUN npm install
+RUN npm run build
+
+
 FROM build AS publish
 RUN dotnet publish "dotnet-docker.csproj" -c Release -o /app/publish
+COPY --from=node /ClientApp/build ./app/publish/ClientApp
+
 
 FROM base AS final
 WORKDIR /app
